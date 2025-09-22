@@ -132,6 +132,8 @@ def send_mailgun_verification(email: str, guild_name: str, token: str) -> bool:
         print(response.content)
         print(response)
         
+        st.write("requests response:", response.content)
+        
         return response.status_code == 200
         
     except Exception as e:
