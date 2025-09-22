@@ -112,7 +112,7 @@ def send_mailgun_verification(email: str, guild_name: str, token: str) -> bool:
         html_content = f"""
         <h2>Welcome to Dune: Awakening Landsraad Challenge Tracker!</h2>
         <p><strong>Guild:</strong> {guild_name}</p>
-        <p>Please verify your email address by copying this verification token:</p>
+        <p>Please use this verification token to verify your e-mail address on the Landsraad Tracker:</p>
         <div style="background-color: #f5f5f5; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 16px;">
             {token}
         </div>
@@ -132,8 +132,6 @@ def send_mailgun_verification(email: str, guild_name: str, token: str) -> bool:
         )
         print(response.content)
         print(response)
-        
-        st.write("requests response:", response.content)
         
         return response.status_code == 200
         

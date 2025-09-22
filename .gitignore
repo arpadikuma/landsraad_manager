@@ -2,3 +2,4 @@
 *.csv
 !item_list.csv
 .env
+*.bak
