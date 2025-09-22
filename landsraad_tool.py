@@ -129,6 +129,8 @@ def send_mailgun_verification(email: str, guild_name: str, token: str) -> bool:
             },
             timeout=(10, 20)
         )
+        print(response.content)
+        print(response)
         
         return response.status_code == 200
         
