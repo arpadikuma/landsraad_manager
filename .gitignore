@@ -1,2 +1,4 @@
 *.ipyn*
 *.csv
+!item_list.csv
+.env
