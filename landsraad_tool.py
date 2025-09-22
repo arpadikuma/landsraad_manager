@@ -101,6 +101,7 @@ def send_mailgun_verification(email: str, guild_name: str, token: str) -> bool:
         
         api_key = os.getenv('MAILGUN_API_KEY')
         domain = os.getenv('MAILGUN_DOMAIN')
+        api_url = os.getenv('MAILGUN_API_URL')
         from_email = os.getenv('MAILGUN_FROM_EMAIL', f'noreply@{domain}')
         
         if not api_key or not domain:
@@ -119,7 +120,7 @@ def send_mailgun_verification(email: str, guild_name: str, token: str) -> bool:
         """
         
         response = requests.post(
-            f"https://api.mailgun.net/v3/{domain}/messages",
+            f"{api_url}/v3/{domain}/messages",
             auth=("api", api_key),
             data={
                 "from": from_email,
