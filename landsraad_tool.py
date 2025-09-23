@@ -735,10 +735,9 @@ Solari,2000
 
         col1, col2 = st.columns(2)
         with col1:
-            st.metric(f"Still Needed for {selected_reward}", f"{still_needed:,}")
-
-        with col2:
             st.metric("In Stock", f"{current_stock}")
+        with col2:
+            st.metric(f"Still Needed for {selected_reward}", f"{still_needed:,}")
 
         st.metric("Completion", f"{completion_percentage:.1f}%")
         st.progress(completion_percentage / 100)
@@ -1107,10 +1106,10 @@ Solari,2000
             st.metric("Total Items", total_items)
 
         with col2:
-            st.metric("Completed Tasks", completed_tasks)
+            st.metric("Fully Covered Items", completed_tasks)
 
         with col3:
-            st.metric("Overall Completion", f"{completion_rate:.1f}%")
+            st.metric("Overall Coverage", f"{completion_rate:.1f}%")
 
 
 if __name__ == "__main__":
