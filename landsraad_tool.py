@@ -700,75 +700,53 @@ Spice,1500
 Water,750
 Solari,2000
 "Advanced Machinery",100''', language='csv')
-    
+
     # Main content
     st.header("📊 Item Details")
-    
+
     if selected_item:
         name, category, points_per_item, current_stock = selected_item
-        
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Name", name)
+
+        with col2:
+            st.metric("Category", category)
+
         effective_points = get_effective_points(points_per_item, weeks_lost)
         required_amount = calculate_required_amount(points_per_item, target_points, weeks_lost)
         still_needed = max(0, required_amount - current_stock)
         completion_percentage = min(100, (current_stock / required_amount) * 100)
-        
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
-            st.metric("Category", category)
             if weeks_lost > 0:
                 st.metric("Points per Item", f"{points_per_item} → {effective_points:.1f}", 
                          delta=f"{bonus_multiplier:.1f}x bonus")
             else:
                 st.metric("Points per Item", f"{points_per_item}")
-            st.metric("Required Amount", f"{required_amount:,}")
-        
         with col2:
-            st.metric("Still Needed", f"{still_needed:,}")
-            st.metric("Completion", f"{completion_percentage:.1f}%")
-            st.progress(completion_percentage / 100)
-        
+            st.metric(f"Required Amount for {selected_reward}", f"{required_amount:,}")
+
+        st.divider()
         st.info(f"🎯 Target: **{selected_reward}** ({target_points:,} points)")
-        
-        st.subheader("Update Stock")
-        new_stock = st.number_input("In Stock", min_value=0, value=current_stock, key=f"stock_{name}")
-        
-        col_update, col_quick = st.columns([1, 2])
-        
-        with col_update:
-            if st.button("Update Stock", type="primary"):
-                update_item_stock(name, new_stock)
-                st.success("Stock updated!")
-                st.rerun()
-        
-        with col_quick:
-            st.write("Quick Actions:")
-            quick_cols = st.columns(4)
-            
-            with quick_cols[0]:
-                if st.button("+10"):
-                    update_item_stock(name, current_stock + 10)
-                    st.rerun()
-            
-            with quick_cols[1]:
-                if st.button("+100"):
-                    update_item_stock(name, current_stock + 100)
-                    st.rerun()
-            
-            with quick_cols[2]:
-                if st.button("+1000"):
-                    update_item_stock(name, current_stock + 1000)
-                    st.rerun()
-            
-            with quick_cols[3]:
-                if st.button("Complete"):
-                    update_item_stock(name, required_amount)
-                    st.rerun()
-        
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(f"Still Needed for {selected_reward}", f"{still_needed:,}")
+
+        with col2:
+            st.metric("In Stock", f"{current_stock}")
+
+        st.metric("Completion", f"{completion_percentage:.1f}%")
+        st.progress(completion_percentage / 100)
+
         # Status display
         completions_achieved = current_stock // required_amount
         items_for_next = required_amount - (current_stock % required_amount) if current_stock % required_amount != 0 else 0
-        
+
         if completions_achieved == 0:
             if still_needed == 0:
                 st.success(f"✅ 1x {selected_reward} Complete!")
@@ -781,18 +759,75 @@ Solari,2000
                 st.success(f"✅ {completions_achieved}x {selected_reward} Complete!")
             else:
                 st.info(f"🎯 {completions_achieved}x {selected_reward} complete - {items_for_next:,} needed for #{completions_achieved + 1}")
+
+        st.divider()
+        st.info("Still Required Amount for Each Goal:")
+        reward_cols = st.columns(6)
+        for i, col in enumerate(reward_cols):
+            with col:
+                reward_total = list(reward_targets.values())[i]
+                selected_required_amount = calculate_required_amount(points_per_item, reward_total, weeks_lost)
+                selected_still_needed = max(0, selected_required_amount - current_stock)
+
+                total_covered = current_stock // selected_required_amount
+                # covered_rest = current_stock % selected_required_amount
+                remainder_next = (selected_required_amount * (total_covered + 1)) - current_stock
+
+                st.metric(list(reward_targets.keys())[i], selected_still_needed)
+                if total_covered > 0:
+                    selected_text = f"{total_covered}x covered"
+                    if remainder_next > 0:
+                        selected_text = f"{selected_text}\n{remainder_next} remaining for #{total_covered+1}"
+                    st.success(selected_text)
+
+        st.subheader("Update Stock")
+        new_stock = st.number_input("In Stock", min_value=0, value=current_stock, key=f"stock_{name}")
+
+        col_update, col_quick = st.columns([1, 2])
+
+        with col_update:
+            if st.button("Update Stock", type="primary"):
+                update_item_stock(name, new_stock)
+                st.success("Stock updated!")
+                st.rerun()
+
+        with col_quick:
+            st.write("Quick Actions:")
+            quick_cols = st.columns(4)
+
+            with quick_cols[0]:
+                if st.button("+10"):
+                    update_item_stock(name, current_stock + 10)
+                    st.rerun()
+
+            with quick_cols[1]:
+                if st.button("+100"):
+                    update_item_stock(name, current_stock + 100)
+                    st.rerun()
+
+            with quick_cols[2]:
+                if st.button("+1000"):
+                    update_item_stock(name, current_stock + 1000)
+                    st.rerun()
+
+            with quick_cols[3]:
+                if st.button("Complete"):
+                    update_item_stock(name, required_amount)
+                    st.rerun()
+
     else:
         st.info("Select an item from the sidebar to view details")
-    
+
     # Overview table
     st.header("📋 Inventory Overview")
-    
+
     col1, col2 = st.columns(2)
     with col1:
         multi_column_view = st.checkbox("Multi-Column View", value=False)
-    with col2:
-        editable_mode = st.checkbox("Edit Stock", value=False, help="Allow editing Current Stock")
-    
+    # with col2:
+    #     editable_mode = st.checkbox("Edit Stock", value=False, help="Allow editing Current Stock")
+    editable_mode = True
+
     if all_items:
         overview_data = []
         for item in all_items:
@@ -801,19 +836,19 @@ Solari,2000
             required = calculate_required_amount(points_per_item, target_points, weeks_lost)
             needed = max(0, required - current_stock)
             completion = min(100, (current_stock / required) * 100)
-            
+
             completions_achieved = current_stock // required
             items_for_next = required - (current_stock % required) if current_stock % required != 0 else 0
-            
+
             if completions_achieved == 0:
                 status = f"{needed:,} needed for #1"
             elif items_for_next == 0:
                 status = f"{completions_achieved}x covered"
             else:
                 status = f"{completions_achieved}x covered - {items_for_next:,} needed for #{completions_achieved + 1}"
-            
+
             points_display = f"{points_per_item} → {effective_points:.1f}" if weeks_lost > 0 else str(points_per_item)
-            
+
             if multi_column_view:
                 overview_data.append({
                     "Item": name,
@@ -833,10 +868,10 @@ Solari,2000
                     "Completion %": f"{completion:.1f}%",
                     "Status": status
                 })
-        
+
         df = pd.DataFrame(overview_data)
         original_df = df.copy() if editable_mode else None
-        
+
         # Sorting
         if not multi_column_view:
             sort_col1, sort_col2 = st.columns([1, 3])
@@ -844,12 +879,12 @@ Solari,2000
                 sort_by = st.selectbox("Sort by:", df.columns.tolist())
             with sort_col2:
                 ascending = st.checkbox("Ascending", value=True)
-            
+
             if sort_by == "Item":
                 df = df.sort_values(by=sort_by, ascending=ascending)
             else:
                 df = df.sort_values(by=[sort_by, "Item"], ascending=[ascending, True])
-        
+
         # Format for display if not editable
         if not editable_mode:
             display_df = df.copy()
@@ -858,20 +893,20 @@ Solari,2000
                     display_df[col] = display_df[col].apply(lambda x: f"{x:,}")
         else:
             display_df = df.copy()
-        
+
         # Display table
         if multi_column_view:
             # Split dataframe into multiple columns for better visibility
             num_items = len(display_df)
             items_per_column = max(10, num_items // 3)  # At least 10 items per column, max 3 columns
-            
+
             if num_items <= 20:
                 # Small dataset - use 2 columns
                 mid_point = num_items // 2
                 height = int(36.25 * (max(mid_point, num_items - mid_point) + 1))
-                
+
                 col1, col2 = st.columns(2)
-                
+
                 with col1:
                     st.subheader(f"Items 1-{mid_point}")
                     if editable_mode:
@@ -892,7 +927,7 @@ Solari,2000
                         )
                     else:
                         st.dataframe(display_df.iloc[:mid_point], use_container_width=True, hide_index=True, height=height)
-                
+
                 with col2:
                     st.subheader(f"Items {mid_point + 1}-{num_items}")
                     if editable_mode:
@@ -913,7 +948,7 @@ Solari,2000
                         )
                     else:
                         st.dataframe(display_df.iloc[mid_point:], use_container_width=True, hide_index=True, height=height)
-                
+
                 # Process edits if in edit mode
                 if editable_mode:
                     # Combine edited dataframes
@@ -921,18 +956,18 @@ Solari,2000
                     if process_dataframe_edits(edited_combined, original_df):
                         st.success("✅ Stock updated!")
                         st.rerun()
-                        
+
             else:
                 # Larger dataset - use 3 columns
                 first_split = items_per_column
                 second_split = items_per_column * 2
-                
+
                 items_last_column = num_items - second_split
                 max_items = max(items_per_column, items_last_column)
                 height = int(36.25 * (max_items + 1))
-                
+
                 col1, col2, col3 = st.columns(3)
-                
+
                 with col1:
                     st.subheader(f"Items 1-{first_split}")
                     if editable_mode:
@@ -953,7 +988,7 @@ Solari,2000
                         )
                     else:
                         st.dataframe(display_df.iloc[:first_split], use_container_width=True, hide_index=True, height=height)
-                
+
                 with col2:
                     st.subheader(f"Items {first_split + 1}-{second_split}")
                     if editable_mode:
@@ -974,7 +1009,7 @@ Solari,2000
                         )
                     else:
                         st.dataframe(display_df.iloc[first_split:second_split], use_container_width=True, hide_index=True, height=height)
-                
+
                 with col3:
                     st.subheader(f"Items {second_split + 1}-{num_items}")
                     if editable_mode:
@@ -995,7 +1030,7 @@ Solari,2000
                         )
                     else:
                         st.dataframe(display_df.iloc[second_split:], use_container_width=True, hide_index=True, height=height)
-                
+
                 # Process edits if in edit mode
                 if editable_mode:
                     # Combine edited dataframes
@@ -1018,7 +1053,7 @@ Solari,2000
                 },
                 disabled=[col for col in display_df.columns if col != "In Stock"]
             )
-            
+
             if process_dataframe_edits(edited_df, original_df):
                 st.success("✅ Stock updated!")
                 st.rerun()
@@ -1033,23 +1068,23 @@ Solari,2000
                     for col in display_df.columns
                 }
             )
-        
+
         # Quick item selector
         with st.expander("📋 Quick Item Selector", expanded=False):
             st.markdown("Click any item to select it in the main interface:")
-            
+
             categories = {}
             for item in all_items:
                 name, category, points_per_item, current_stock = item
                 if category not in categories:
                     categories[category] = []
                 categories[category].append(name)
-            
+
             if categories:
                 category_names = list(categories.keys())
                 num_cols = min(3, len(category_names))
                 cols = st.columns(num_cols)
-                
+
                 for idx, category in enumerate(category_names):
                     with cols[idx % num_cols]:
                         st.write(f"**{category}**")
@@ -1057,25 +1092,26 @@ Solari,2000
                             if st.button(item_name, key=f"quick_select_{item_name}", use_container_width=True):
                                 st.session_state.quick_selected_item = item_name
                                 st.rerun()
-    
+
     # Statistics
     if all_items:
         st.header("📈 Statistics")
-        
+
         total_items = len(all_items)
         completed_tasks = sum(1 for item in all_items if item[3] >= calculate_required_amount(item[2], target_points, weeks_lost))
         completion_rate = (completed_tasks / total_items) * 100 if total_items > 0 else 0
-        
+
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
             st.metric("Total Items", total_items)
-        
+
         with col2:
             st.metric("Completed Tasks", completed_tasks)
-        
+
         with col3:
             st.metric("Overall Completion", f"{completion_rate:.1f}%")
+
 
 if __name__ == "__main__":
     main()
